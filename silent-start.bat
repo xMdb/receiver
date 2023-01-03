@@ -1,0 +1,1 @@
+cmd /c start /min "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -Command python 'D:\Files\Actual Files\projects\receiver\main.py'
