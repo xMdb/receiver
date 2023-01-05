@@ -1,0 +1,13 @@
+requests:
+  - endpoint: "/ssh/maindns"
+    action: "wt new-tab -p PowerShell ssh ubuntu@primary.pihole.box"
+  - endpoint: "/ssh/backupdns"
+    action: "wt new-tab -p PowerShell ssh matt@secondary.pihole.box"
+  - endpoint: "/ssh/nova"
+    action: "wt new-tab -p PowerShell ssh matt@nova.box"
+  - endpoint: "/rdp/torrentbox"
+    action: "mstsc /v:torrent.vm.box"
+  - endpoint: "/rdp/winserv"
+    action: "mstsc /v:10.1.20.100"
+  - endpoint: "/files/projects"
+    action: 'explorer "D:\Files\Actual Files\projects"'

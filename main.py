@@ -1,17 +1,32 @@
 import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import subprocess
+import yaml
+import shlex
 
 # Functions
-def run_program(program_path, *args):
-    subprocess.run(["cmd.exe", "/c", "start", program_path] + list(args))
+def read_data_from_file(file_path):
+    with open(file_path, "r") as f:
+        data = yaml.safe_load(f)
+    actions = []
+    for action_data in data["requests"]:
+        endpoint = action_data["endpoint"]
+        action = shlex.split(action_data["action"])
+        actions.append((endpoint, action))
+    return actions
+
+
+def run_program(action):
+    subprocess.run(["cmd.exe", "/c", "start"] + action)
 
 
 def send_success_response(self):
     self.send_response(200)
     self.end_headers()
     # send History.back() to browser to close the tab
-    self.wfile.write(b"<!DOCTYPE html><html><body><h1>Success</h1><script>history.back()</script></body></html>")
+    self.wfile.write(
+        b"<!DOCTYPE html><html><body><h1>Success</h1><script>history.back()</script></body></html>"
+    )
 
 
 def send_not_found_response(self):
@@ -30,29 +45,13 @@ def send_not_allowed_response(self):
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logging.info(f"Received request for {self.path}")
+        config_data = read_data_from_file("config.yml")
         if self.client_address[0] == "10.0.10.101":
-            if self.path == "/ssh/maindns":
-                run_program(
-                    "wt", "new-tab", "PowerShell", "ssh", "ubuntu@primary.pihole.box"
-                )
-                send_success_response(self)
-            elif self.path == "/ssh/backupdns":
-                run_program(
-                    "wt", "new-tab", "PowerShell", "ssh", "matt@secondary.pihole.box"
-                )
-                send_success_response(self)
-            elif self.path == "/ssh/nova":
-                run_program("wt", "new-tab", "PowerShell", "ssh", "matt@nova.box")
-                send_success_response(self)
-            elif self.path == "/rdp/torrentbox":
-                run_program("mstsc", "/v:torrent.vm.box")
-                send_success_response(self)
-            elif self.path == "/rdp/winserv":
-                run_program("mstsc", "/v:10.1.20.100")
-                send_success_response(self)
-            elif self.path == "/files/projects":
-                run_program("explorer", "'D:\Files\Actual Files\projects'")
-                send_success_response(self)
+            for endpoint, action in config_data:
+                if self.path == endpoint:
+                    run_program(action)
+                    send_success_response(self)
+                    break
             else:
                 send_not_found_response(self)
         else:
